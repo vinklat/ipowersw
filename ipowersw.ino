@@ -172,17 +172,18 @@ void get_req(EthernetClient *client, int *req, char *loc_buf) {
 
 #define HTTP "HTTP/1.0 "
 #define REPLY_200 "200 OK\n"
-#define REPLY_400 "400 Bad Request\n"
-#define REPLY_404 "404 Not Found\n"
-#define API_CONTYPE "Content-Type: application/json\n"
-#define HTML_CONTYPE "Content-Type: text/html\n"
-#define CLOSE "Connection: close\n"
-#define NO_CACHE "Cache-Control: no-cache, no-store, must-revalidate\nPragma: no-cache\nExpires: 0\n"
+#define REPLY_400 F("400 Bad Request\n")
+#define REPLY_404 F("404 Not Found\n")
+#define API_CONTYPE F("Content-Type: application/json\n")
+#define HTML_CONTYPE F("Content-Type: text/html\n")
+#define CLOSE F("Connection: close\n")
+#define NO_CACHE F("Cache-Control: no-cache, no-store, must-revalidate\nPragma: no-cache\nExpires: 0\n")
+#define REDIRECT F("Refresh: 3; url=/")
 
-#define HTML_HEAD "<!DOCTYPE HTML><html><body>"
-#define HTML_FOOT "</body></html>"
-#define HTML_FORM_ON "<form action=\"/1\" method=\"POST\"><input type=\"submit\" value=\"Turn ON\"></form>"
-#define HTML_FORM_OFF "<form action=\"/0\" method=\"POST\"><input type=\"submit\" value=\"Turn OFF\"></form>"
+#define HTML_HEAD F("<!DOCTYPE HTML><html><body>")
+#define HTML_FOOT F("</body></html>")
+#define HTML_FORM_ON F("<form action=\"/1\" method=\"POST\"><input type=\"submit\" value=\"Turn ON\"></form>")
+#define HTML_FORM_OFF F("<form action=\"/0\" method=\"POST\"><input type=\"submit\" value=\"Turn OFF\"></form>")
 
 #define LOC_ROOT 0
 #define LOC_0 1
@@ -248,14 +249,14 @@ void render_response(EthernetClient *client, int *req, char *loc_buf) {
         case LOC_0:
           digitalWrite(PIN_RELAY, HIGH);
           relay_state=0;
-          *client << HTTP << REPLY_200 << HTML_CONTYPE << NO_CACHE << CLOSE << '\n';
-          *client << HTML_HEAD << "relay: " << relay_state << HTML_FORM_ON << HTML_FOOT;
+          *client << HTTP << REPLY_200 << HTML_CONTYPE << NO_CACHE << REDIRECT << '\n';
+//          *client << HTML_HEAD << "relay: " << relay_state << HTML_FORM_ON << HTML_FOOT;
           break;
         case LOC_1:
           digitalWrite(PIN_RELAY, LOW);
           relay_state=1;
-          *client << HTTP << REPLY_200 << HTML_CONTYPE << NO_CACHE << CLOSE << '\n';
-          *client << HTML_HEAD << "relay: " << relay_state << HTML_FORM_OFF << HTML_FOOT;
+          *client << HTTP << REPLY_200 << HTML_CONTYPE << NO_CACHE << REDIRECT << '\n';
+//          *client << HTML_HEAD << "relay: " << relay_state << HTML_FORM_OFF << HTML_FOOT;
           break;
         default:
           found=false;
