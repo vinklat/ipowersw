@@ -1,4 +1,5 @@
 #include <UIPEthernet.h>
+#include <DHT.h>
 
 /* 
  * Setup your application here:
@@ -15,17 +16,28 @@
 #define REQ_BUF_SIZE 5
 #define LOC_BUF_SIZE 10
 
+// Uncomment whatever type you're using!
+#define DHTTYPE DHT11   // DHT 11 
+//#define DHTTYPE DHT22   // DHT 22  (AM2302)
+//#define DHTTYPE DHT21   // DHT 21 (AM2301)
 
+/*
+ *
+ */
 
 template<class T> inline Print &operator <<(Print &obj, T arg) { 
   obj.print(arg); return obj;
 }
 
-// Initialize the Ethernet server library
-// with the IP address and port you want to use
-// (port 80 is default for HTTP):
+/*
+ *
+ */
+
 EthernetServer server(80);
 int relay_state;
+#ifdef PIN_DHT
+DHT dht(PIN_DHT, DHTTYPE);
+#endif
 
 /*
  *
@@ -66,6 +78,10 @@ void setup() {
   pinMode(PIN_RELAY, OUTPUT);
   digitalWrite(PIN_RELAY, HIGH);
   relay_state=0;
+
+  #ifdef PIN_DHT
+  dht.begin();
+  #endif
 }
 
 
@@ -213,10 +229,19 @@ void render_response(EthernetClient *client, int *req, char *loc_buf) {
   if (found) 
   {
     if (*req==REQ_GET) {
+
+      #ifdef PIN_DHT
+      float h = dht.readHumidity();
+      float t = dht.readTemperature();
+      #endif
+      
       switch (loc) {
         case LOC_ROOT:
           *client << HTTP << REPLY_200 << HTML_CONTYPE << NO_CACHE << CLOSE << '\n';
-          *client << HTML_HEAD << "relay: " << relay_state;
+          *client << HTML_HEAD << "relay: " << relay_state << "<br/>";
+          #ifdef PIN_DHT
+          *client << "humidity: " << h << "%<br/>temperature: " << t << "&deg;C<br/>";
+          #endif
           if (relay_state)
             *client << HTML_FORM_OFF;
           else
@@ -225,7 +250,11 @@ void render_response(EthernetClient *client, int *req, char *loc_buf) {
           break;
         case LOC_API_ROOT:
           *client << HTTP << REPLY_200 << API_CONTYPE << CLOSE << '\n';
-          *client << "{\"relay\": " << relay_state << "}";
+          *client << "{\"relay\": " << relay_state;
+          #ifdef PIN_DHT
+          *client << ", \"h\": " << h << ", \"t\"" << t;
+          #endif
+          *client << "}";
           break;
         default:
           found=false;
