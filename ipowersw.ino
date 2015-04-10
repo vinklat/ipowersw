@@ -1,3 +1,10 @@
+/*
+ * Ethernet IP power switch with HTTP web interface and REST API. Includes temperature, humidity and ambient light metering.
+ * Powered by Arduino + ENC28J60 module, relay, DHT11 sensor, photoresistor.
+ * Read more at https://github.com/vinklat/ipowersw
+ * by Vaclav Vinklat, 2015, GPLv2
+ */
+ 
 #include <UIPEthernet.h>
 #include <DHT.h>
 
@@ -11,7 +18,7 @@
 #define PIN_LIGHT 2
 
 #define USE_DHCP
-#define IP_ADDR 10,28,17,123
+#define IP_ADDR 192,168,0,2
 #define MAC_ADDR 0xDE,0xAD,0xBE,0xEF,0xFE,0xED
 
 #define REQ_BUF_SIZE 5
@@ -57,18 +64,16 @@ void setup() {
   
   // start the Ethernet connection:
   #ifdef USE_DHCP
-  if (Ethernet.begin(mac) == 0) {
+  while (!Ethernet.begin(mac)) {
     #ifdef DEBUG
     Serial.println("Failed to configure Ethernet using DHCP");
     #endif
-    // no point in carrying on, so do nothing forevermore:
-    for (;;)
-      ;
+    delay(2);    
+  }
   #else
   IPAddress ip(IP_ADDR);
   Ethernet.begin(mac, ip);
   #endif
-  }
   
   server.begin();
   #ifdef DEBUG
@@ -328,7 +333,7 @@ void loop() {
     render_response(&client, &req, loc_buf);
     
     // give the web browser time to receive the data
-    delay(2);
+    delay(1);
     // close the connection:
     client.stop();
     
