@@ -8,6 +8,7 @@
 #define DEBUG
 #define PIN_RELAY 4
 #define PIN_DHT 5
+#define PIN_LIGHT 2
 
 #define USE_DHCP
 #define IP_ADDR 10,28,17,123
@@ -234,6 +235,9 @@ void render_response(EthernetClient *client, int *req, char *loc_buf) {
       float h = dht.readHumidity();
       float t = dht.readTemperature();
       #endif
+      #ifdef PIN_LIGHT
+      int light  = analogRead(PIN_LIGHT);
+      #endif
       
       switch (loc) {
         case LOC_ROOT:
@@ -241,6 +245,9 @@ void render_response(EthernetClient *client, int *req, char *loc_buf) {
           *client << HTML_HEAD << "relay: " << relay_state << "<br/>";
           #ifdef PIN_DHT
           *client << "humidity: " << h << "%<br/>temperature: " << t << "&deg;C<br/>";
+          #endif
+          #ifdef PIN_LIGHT
+          *client << "light: " << light << "<br/>";
           #endif
           if (relay_state)
             *client << HTML_FORM_OFF;
@@ -252,7 +259,10 @@ void render_response(EthernetClient *client, int *req, char *loc_buf) {
           *client << HTTP << REPLY_200 << API_CONTYPE << CLOSE << '\n';
           *client << "{\"relay\": " << relay_state;
           #ifdef PIN_DHT
-          *client << ", \"h\": " << h << ", \"t\"" << t;
+          *client << ", \"humidity\": " << h << ", \"temperature\": " << t;
+          #ifdef PIN_LIGHT
+          *client << ", \"light\": " << light;
+          #endif
           #endif
           *client << "}";
           break;
